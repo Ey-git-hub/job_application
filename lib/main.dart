@@ -12,7 +12,7 @@ class JobSearchApp extends StatelessWidget {
   Widget build(BuildContext context) {
     const ink = Color(0xff17202a);
     return MaterialApp(
-      title: 'Job Search',
+      title: 'Job Application',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
