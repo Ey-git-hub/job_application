@@ -52,7 +52,19 @@ class InMemoryJobRepository implements JobRepository {
       salary: '\$130k - \$165k',
       logoLetter: 'G',
       logoColor: 0xff7028a0,
-    ),
+    ), Job(
+      id: 'job-5',
+      title: 'Senior backend Developer',
+      company: 'TechFlow Inc.',
+      location: 'Addis ababa, MEXICO',
+      postedLabel: '3 days ago',
+      jobType: 'Part-Time',
+      workplace: 'Remote',
+      salary: '\$120k - \$150k',
+      logoLetter: 'T',
+      logoColor: 0xff1689c7,
+      isBookmarked: true,
+    )
   ];
 
   @override
