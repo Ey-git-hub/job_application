@@ -1,82 +1,170 @@
-# Flutter App Guide for Beginners
+# Flutter App Guide: Learn by Building
 
-This guide explains only the Flutter app inside this project. It is written like we are teaching a very curious five-year-old who wants to know how every toy works.
+This guide is for learning how to write this Flutter app yourself. Do not read it only as documentation. Open the project, type the examples, make small changes, and use the tests to check your thinking.
 
-## 1. The Big Picture
-
-Imagine the app is a little restaurant:
-
-- **The screen** is the dining room. It shows buttons, cards, text, and icons.
-- **The provider** is the waiter. It remembers what the user is doing and tells the screen when something changes.
-- **The repository** is the kitchen. It finds the jobs and sends them back.
-- **The entity** is the menu card. It describes what a job looks like.
-- **The test** is a friendly inspector. It clicks things to make sure they work.
-
-The app flow is:
+The goal is not to memorize Flutter classes. The goal is to learn a repeatable process:
 
 ```text
-User taps or types
-        |
-        v
-JobHomePage sends a request
-        |
-        v
-JobFeedController changes the state
-        |
-        v
-JobRepository finds jobs
-        |
-        v
-Riverpod tells the screen to draw again
+understand the requirement
+        -> model the data
+        -> write the behavior
+        -> connect the screen
+        -> test the result
 ```
 
-## 2. Where the Flutter Code Lives
+## 1. Start Here
+
+From the project root, run:
 
 ```text
-lib/
-  main.dart                              Starts the app
-  domain/
-    entities/
-      job.dart                           Describes one job
-      job_application.dart               Describes one application
-    repositories/
-      job_repository.dart                Says what job data must do
-  data/
-    repositories/
-      in_memory_job_repository.dart      Provides demo jobs
-    auth/
-      secure_token_store.dart            Stores login tokens safely
-  presentation/
-    pages/
-      job_home_page.dart                 Draws the visible app
-    providers/
-      job_providers.dart                 Controls job search and bookmarks
-      application_providers.dart         Controls applications
-
-test/
-  widget_test.dart                       Checks the app by clicking it
+flutter pub get
+flutter devices
+flutter run
 ```
 
-The folders have different jobs. Keeping them separate makes the project easier to understand and easier to change later.
+If Flutter asks for a device, choose a device that is available. You can use Chrome, Windows, Android, or another configured target.
 
-## 3. The App Starts in `main.dart`
+Before changing code, answer these questions:
 
-File: `lib/main.dart`
+1. What does the user see?
+2. What can the user do?
+3. What data must the app remember?
+4. What should happen when something fails?
 
-The most important line is:
+For this app, the first answers are:
+
+- The user sees job cards, search, filters, saved jobs, and applications.
+- The user can search, filter, bookmark, open a job, and apply.
+- The app remembers the current search, bookmarks, and applications while it is running.
+- The screen shows loading or error UI when the data operation is not ready or fails.
+
+## 2. Learn the Project Map
+
+Start with these files in this order:
+
+```text
+lib/main.dart
+lib/domain/entities/job.dart
+lib/domain/repositories/job_repository.dart
+lib/data/repositories/in_memory_job_repository.dart
+lib/presentation/providers/job_providers.dart
+lib/presentation/pages/job_home_page.dart
+test/widget_test.dart
+```
+
+Each folder has one main responsibility:
+
+- `domain/entities` describes data.
+- `domain/repositories` describes what data operations are possible.
+- `data/repositories` implements those operations.
+- `presentation/providers` stores changing state and coordinates operations.
+- `presentation/pages` builds the visible interface.
+- `test` checks behavior from a user's point of view.
+
+Do not try to understand every line on the first pass. Follow one value through the app. For example, follow the text `Data Analyst` from the search field to the repository and back to the job card.
+
+## 3. Dart Basics Used in This App
+
+### Variables and types
+
+```dart
+String query = '';
+int selectedTab = 0;
+bool isBookmarked = false;
+final categories = ['All', 'Designer'];
+```
+
+The type describes what a variable can contain. `String` is text, `int` is a whole number, and `bool` is `true` or `false`.
+
+`final` means the variable can be assigned once:
+
+```dart
+final name = 'Amina';
+```
+
+Use `final` when the variable itself should not point to a different value later. A `final` list can still contain mutable items, so `final` does not automatically make every object immutable.
+
+### Functions
+
+```dart
+String greeting(String name) {
+  return 'Hello, $name';
+}
+```
+
+The part before the function name is the return type. The text inside parentheses is the input. A short function can use `=>`:
+
+```dart
+String greeting(String name) => 'Hello, $name';
+```
+
+The `$name` syntax inserts a value into a string.
+
+### Classes and constructors
+
+```dart
+class Person {
+  const Person({required this.name});
+
+  final String name;
+}
+```
+
+`class` creates a new type. The constructor creates an object of that type. `required` means the caller must provide the named value. `this.name` assigns the constructor argument to the field.
+
+### Null safety
+
+```dart
+String title = 'Developer';
+String? optionalTitle;
+```
+
+`String` cannot be null. `String?` can be null. When you have a nullable value, handle the missing case rather than guessing:
+
+```dart
+final label = optionalTitle ?? 'No title';
+```
+
+`??` uses the value on the right when the value on the left is null.
+
+### Collections and loops
+
+```dart
+final remoteJobs = jobs.where((job) => job.workplace == 'Remote').toList();
+
+for (final job in remoteJobs) {
+  print(job.title);
+}
+```
+
+`where` keeps matching items. `map` transforms items. `toList()` turns the result into a list. Read these methods as a sentence: "from jobs, keep jobs whose workplace is Remote."
+
+### Futures and async code
+
+```dart
+Future<List<Job>> loadJobs() async {
+  return repository.searchJobs();
+}
+
+final jobs = await loadJobs();
+```
+
+`Future<T>` means a `T` value will be available later. `async` allows `await`. `await` pauses this function until the future completes without freezing the whole app.
+
+## 4. Understand App Startup
+
+Open `lib/main.dart` and read this line from the inside out:
 
 ```dart
 void main() => runApp(const ProviderScope(child: JobSearchApp()));
 ```
 
-Read it from the inside out:
+1. `JobSearchApp` is the root widget.
+2. `ProviderScope` gives Riverpod a place to store provider state.
+3. `runApp` tells Flutter which widget is the root of the screen.
+4. `main` is the first function Dart runs.
 
-1. `JobSearchApp` is our app.
-2. `ProviderScope` gives Riverpod a place to keep information.
-3. `runApp` puts the app on the phone screen.
-4. `main` is the first function Flutter calls.
-
-`JobSearchApp` builds the general app shell:
+The root widget returns a `MaterialApp`:
 
 ```dart
 return MaterialApp(
@@ -86,19 +174,23 @@ return MaterialApp(
 );
 ```
 
-This means:
+`MaterialApp` supplies app-level configuration such as the theme and the first page. `home` is the widget shown first.
 
-- Give the app a name.
-- Choose colors, fonts, and sizes.
-- Show `JobHomePage` first.
+### Exercise: make a first change
 
-`MaterialApp` is like a box of ready-made Flutter furniture. It gives us navigation, themes, dialogs, buttons, and many other useful things.
+Change the title text in `main.dart`, run the app, and identify whether the changed value appears in the device title, the page heading, or both. Then restore or intentionally update the other value in `job_home_page.dart`.
 
-## 4. Entities Are Data Shapes
+Run after the change:
 
-File: `lib/domain/entities/job.dart`
+```text
+flutter analyze
+```
 
-A `Job` is a description of one job:
+The purpose of this exercise is to notice that two pieces of text can look related while coming from different code locations.
+
+## 5. Model One Job
+
+Open `lib/domain/entities/job.dart`. The `Job` class is the data shape used by the rest of the app:
 
 ```dart
 class Job {
@@ -106,57 +198,61 @@ class Job {
     required this.id,
     required this.title,
     required this.company,
-    // more fields...
+    required this.location,
+    required this.postedLabel,
+    required this.jobType,
+    required this.workplace,
+    required this.salary,
+    required this.logoLetter,
+    required this.logoColor,
+    this.isBookmarked = false,
   });
 
   final String id;
   final String title;
   final String company;
+  final String location;
+  final String postedLabel;
+  final String jobType;
+  final String workplace;
+  final String salary;
+  final String logoLetter;
+  final int logoColor;
+  final bool isBookmarked;
 }
 ```
 
-Think of a job as a labeled box:
+When adding a field, ask three questions:
+
+1. What type is it?
+2. Must every job provide it?
+3. Which screen or behavior uses it?
+
+The `const` constructor and `final` fields make a job object stable after creation. Stable objects are easier to reason about because another part of the app cannot silently change them.
+
+### Why `copyWith` exists
+
+Bookmarking changes one property of a job. The app creates a new job instead of changing the old object:
+
+```dart
+final savedJob = job.copyWith(isBookmarked: true);
+```
+
+This is the important idea:
 
 ```text
-id          = job-1
-title       = Senior Flutter Developer
-company     = TechFlow Inc.
-location    = San Francisco, CA
-workplace   = Remote
+old job + one new value = new job
 ```
 
-`final` means the label cannot be changed after the box is created. This is useful because data objects should not quietly change behind our back.
+### Exercise: add a field
 
-### Why does `Job` have `copyWith`?
+Add a field called `employmentType`, then update all `Job(...)` constructors in the in-memory repository and display the value on the job card. The analyzer will show every constructor call you forgot to update.
 
-A job is mostly fixed, but its bookmark status can change. Instead of damaging the old job, `copyWith` makes a new job with one changed value:
+This is a useful professional habit: let compiler errors identify the places affected by a data-model change.
 
-```dart
-final updatedJob = oldJob.copyWith(isBookmarked: true);
-```
+## 6. Create a Data Source
 
-This is like making a photocopy of a worksheet and coloring the bookmark on the copy.
-
-`JobApplication` works similarly. It remembers:
-
-- Which job was used.
-- The job title and company.
-- The application status.
-- When the application was created.
-
-`ApplicationStatus` is an enum. An enum is a small list of allowed words:
-
-```dart
-enum ApplicationStatus { submitted, reviewing, interview, offer, rejected }
-```
-
-The app cannot accidentally invent a status like `maybe-later` unless we add it to this list.
-
-## 5. Repositories Explain Where Data Comes From
-
-File: `lib/domain/repositories/job_repository.dart`
-
-The repository interface is a promise:
+Open `lib/domain/repositories/job_repository.dart`. The repository is an interface, or contract:
 
 ```dart
 abstract interface class JobRepository {
@@ -168,157 +264,144 @@ abstract interface class JobRepository {
 }
 ```
 
-It says:
+The interface says what the app needs, not how the data is stored. A repository could use a list, an HTTP API, or a database and still satisfy this contract.
 
-> “Any job data source must know how to search for jobs.”
+Open `lib/data/repositories/in_memory_job_repository.dart`. This implementation stores demo jobs in a list and filters them. Learn the filtering as a sequence:
 
-It does not say whether the jobs come from memory, a web API, or a database. That decision belongs somewhere else.
+1. Normalize the search query with lowercase text.
+2. Check title, company, and location.
+3. Keep the selected category or accept all categories.
+4. Keep the selected workplace or accept all workplaces.
+5. Return the matching jobs.
 
-### The current demo repository
+The current implementation returns a `Future` even though the data is local. That keeps the interface realistic: a future HTTP implementation will also return data later.
 
-File: `lib/data/repositories/in_memory_job_repository.dart`
+### Exercise: add a job
 
-The current app uses a small list stored in the program:
+Add one `Job` to the repository. Before running the app, predict:
+
+- Where will the job appear?
+- Which search terms will find it?
+- Which category and workplace filters will include it?
+
+Then run the app and test each prediction manually. Add a widget test if the job is important to the app.
+
+## 7. Manage State with Riverpod
+
+Open `lib/presentation/providers/job_providers.dart`. There are two important layers:
 
 ```dart
-static const _jobs = [
-  Job(...),
-  Job(...),
-];
+final jobRepositoryProvider = Provider<JobRepository>(
+  (ref) => InMemoryJobRepository(),
+);
 ```
 
-This is excellent for learning and for a screen that works without a server. It is not permanent storage. Closing the app resets the demo data.
-
-When searching, the repository:
-
-1. Makes the search text lowercase.
-2. Looks in the job title, company, and location.
-3. Checks the selected category.
-4. Checks the selected workplace.
-5. Returns only jobs that match.
-
-The word `Future` means the answer may arrive a little later. Searching a real server takes time, so Flutter must be ready to wait.
-
-## 6. Riverpod Is the App's Memory
-
-Files:
-
-- `lib/presentation/providers/job_providers.dart`
-- `lib/presentation/providers/application_providers.dart`
-
-Riverpod helps widgets share information without passing it through every constructor.
-
-### The job provider
+This provider creates the repository. The UI does not need to know which repository implementation is being used.
 
 ```dart
 final jobFeedProvider =
     StateNotifierProvider<JobFeedController, AsyncValue<List<Job>>>(
-  (ref) => JobFeedController(ref.read(jobRepositoryProvider)),
-);
+      (ref) => JobFeedController(ref.read(jobRepositoryProvider)),
+    );
 ```
 
-This says:
+This provider creates the controller and gives it the repository. The controller owns the job-feed state.
 
-- Create one `JobFeedController`.
-- Give it a job repository.
-- Its state is an `AsyncValue<List<Job>>`.
+### Read, watch, and change
 
-`AsyncValue` has three important moods:
-
-```text
-AsyncLoading  = “I am still looking.”
-AsyncData     = “Here are the jobs.”
-AsyncError    = “Something went wrong.”
-```
-
-### The controller
-
-`JobFeedController` remembers:
-
-```dart
-String _query = '';
-String _category = 'All';
-String _workplace = 'All';
-```
-
-When the user types, the page calls:
-
-```dart
-ref.read(jobFeedProvider.notifier).search(value);
-```
-
-The controller saves the text and loads jobs again.
-
-When the user picks a category, it calls:
-
-```dart
-ref.read(jobFeedProvider.notifier).selectCategory(category);
-```
-
-When the user picks Remote, Hybrid, or On-Site, it calls:
-
-```dart
-ref.read(jobFeedProvider.notifier).setWorkplace(workplace);
-```
-
-### How bookmarks work
-
-The controller keeps a set of bookmarked job IDs:
-
-```dart
-final Set<String> _bookmarkedIds = {};
-```
-
-A `Set` is like a bag that keeps each sticker only once. When a bookmark button is tapped, the job ID is added or removed. Then the controller sends a new list to the screen.
-
-This keeps bookmarks while the user searches. In the current demo, the set lives only while the app is running.
-
-### Applications provider
-
-`applicationsProvider` keeps submitted applications in a list. Its `apply` method refuses to add the same job twice:
-
-```dart
-if (state.any((application) => application.jobId == job.id)) return;
-```
-
-That is a small but important rule: one person should not accidentally apply to the same job twice from this screen.
-
-## 7. The Page Draws the Screen
-
-File: `lib/presentation/pages/job_home_page.dart`
-
-`JobHomePage` is a `ConsumerStatefulWidget` because it needs two things:
-
-- `StatefulWidget`: it remembers the selected bottom tab and search text.
-- `ConsumerWidget` behavior: it can read Riverpod providers.
-
-The page watches the job feed:
+Inside a Riverpod widget:
 
 ```dart
 final jobs = ref.watch(jobFeedProvider);
 ```
 
-`watch` means:
+`watch` reads the value and rebuilds the widget when it changes.
 
-> “Please rebuild this part when the provider changes.”
+```dart
+ref.read(jobFeedProvider.notifier).search(value);
+```
 
-The page then draws the correct state:
+`read` gets a value once. `.notifier` gets the controller so the widget can call an action.
+
+Use this rule:
+
+```text
+watch for data the widget displays
+read for an action the user just triggered
+```
+
+### Understand `AsyncValue`
+
+The controller state can be:
+
+```text
+AsyncLoading  -> the operation is running
+AsyncData     -> the operation succeeded
+AsyncError    -> the operation failed
+```
+
+The page handles all three with:
 
 ```dart
 jobs.when(
   loading: () => const CircularProgressIndicator(),
   error: (error, stackTrace) => const Text('Unable to load jobs'),
-  data: (items) => /* draw job cards */,
+  data: (items) => SliverList.builder(
+    itemCount: items.length,
+    itemBuilder: (context, index) => _JobCard(job: items[index]),
+  ),
 );
 ```
 
-This is why the user sees a spinner while jobs load and cards when jobs arrive.
+### Trace a search
 
-## 8. Understanding the Main Screen Pieces
+When the user types into the search field:
 
-### Search box
+1. `TextField.onChanged` receives the new text.
+2. It calls `jobFeedProvider.notifier.search(value)`.
+3. `search` stores the query and calls `load`.
+4. `load` asks the repository for matching jobs.
+5. The controller changes state to `AsyncData` or `AsyncError`.
+6. `ref.watch(jobFeedProvider)` notices the change.
+7. Flutter rebuilds the job list.
 
-The search box has a controller and an `onChanged` callback:
+### Exercise: add a controller action
+
+Add a `clearSearch` method to the controller. Decide whether it should only change the controller state or also clear the `TextEditingController` in the page. You will discover an important boundary: the provider owns job data, while the page owns the text field object.
+
+## 8. Build the Screen
+
+Open `lib/presentation/pages/job_home_page.dart`. `JobHomePage` is a `ConsumerStatefulWidget` because it needs both kinds of behavior:
+
+- `StatefulWidget` behavior for local values such as the selected bottom tab.
+- Riverpod behavior for watching and changing shared application state.
+
+The page watches the feed:
+
+```dart
+final jobs = ref.watch(jobFeedProvider);
+```
+
+The `build` method returns a widget tree. Flutter calls `build` again when watched state or local state changes.
+
+### Local state versus shared state
+
+Keep state local when only this page needs it:
+
+```dart
+int _selectedTab = 0;
+String _selectedCategory = 'All';
+```
+
+Use a provider when multiple widgets need the value or when it represents application behavior:
+
+```dart
+final _bookmarkedIds = <String>{};
+```
+
+In this app, bookmark state belongs in the job controller because searching and the Saved tab both depend on it.
+
+### Search field
 
 ```dart
 TextField(
@@ -328,197 +411,214 @@ TextField(
 )
 ```
 
-Every time the user types a letter, the controller searches again.
+The controller reads and edits the text field. The callback sends the changed value to the job controller. The text field does not directly search the repository.
 
-- `controller` lets the code read or clear the text.
-- `onChanged` runs after the text changes.
-- `ref.read(...notifier)` gets the controller that can change state.
+### Category chips and filters
 
-### Category chips
-
-The category row uses `ChoiceChip`. When one is selected:
+When a category is selected, the page does two things:
 
 ```dart
 setState(() => _selectedCategory = category);
 ref.read(jobFeedProvider.notifier).selectCategory(category);
 ```
 
-There are two updates:
+`setState` updates the visual selection. The provider action updates the job data. These are separate because the selected chip is page presentation state while the filtered jobs are application state.
 
-1. `setState` changes which chip looks selected.
-2. Riverpod searches for matching jobs.
+### Job cards and details
 
-### Job cards
-
-Each `_JobCard` receives one `Job`:
+The list passes one job to `_JobCard`. The card displays data and sends user actions upward:
 
 ```dart
-_JobCard(job: items[index])
+onOpen: () => _showJobDetails(job),
 ```
 
-The card displays the job's title, company, tags, location, salary, and posting age. Its bookmark icon calls:
-
-```dart
-ref.read(jobFeedProvider.notifier).toggleBookmark(job.id)
-```
-
-The card can also open the details sheet. The details sheet contains the **Apply now** button, which calls:
+The details sheet applies through the applications provider:
 
 ```dart
 ref.read(applicationsProvider.notifier).apply(job);
 ```
 
-### Bottom navigation
+The page coordinates the action; the provider owns the application list and the rule that prevents duplicate applications.
 
-The page remembers the selected tab:
+### Exercise: add a visible job property
 
-```dart
-int _selectedTab = 0;
-```
+Choose one field already present on `Job`, such as `postedLabel` or `salary`, and change how it is displayed. Do not change the repository or provider. This teaches you to identify the smallest layer that owns a presentation-only change.
 
-When the user taps a destination:
+## 9. Write Tests While You Learn
 
-```dart
-onDestinationSelected: (index) =>
-    setState(() => _selectedTab = index)
-```
-
-The page then decides what to draw:
-
-```text
-0 = Home
-1 = Saved jobs
-2 = Applications
-3 = Messages
-4 = Profile
-```
-
-The Messages and Profile screens are currently friendly informational screens. They are safe places to add real features later.
-
-## 9. Secure Token Storage
-
-File: `lib/data/auth/secure_token_store.dart`
-
-`SecureTokenStore` uses `flutter_secure_storage` instead of ordinary preferences:
-
-```dart
-await _storage.write(
-  key: _accessTokenKey,
-  value: accessToken,
-);
-```
-
-The operating system protects these values using its secure storage system.
-
-The class can:
-
-- Save an access token and refresh token.
-- Read either token.
-- Delete both during logout.
-
-This class does not perform login by itself. It is only the locked box where tokens are kept after an authentication flow gives them to the app.
-
-## 10. One Complete User Story
-
-Let us follow the user searching for “Data Analyst”:
-
-1. The user types `Data Analyst` into the `TextField`.
-2. `onChanged` calls `JobFeedController.search`.
-3. The controller stores the query.
-4. The controller calls `load`.
-5. `load` calls `InMemoryJobRepository.searchJobs`.
-6. The repository finds the matching job.
-7. The controller changes its state to `AsyncData`.
-8. Riverpod notices the state change.
-9. The page rebuilds.
-10. The Data Analyst card appears.
-
-The UI does not search by itself. The UI asks the controller, and the controller asks the repository. Each part has one job.
-
-## 11. How the Test Checks the App
-
-File: `test/widget_test.dart`
-
-The test creates the same Riverpod wrapper used by the real app:
+Open `test/widget_test.dart`. A widget test creates the app and behaves like a user:
 
 ```dart
 await tester.pumpWidget(
   const ProviderScope(child: JobSearchApp()),
 );
+await tester.pumpAndSettle();
 ```
 
-Then it acts like a tiny robot user:
+Important test methods:
 
-1. Waits for the screen.
-2. Checks that the job title exists.
-3. Taps a bookmark.
-4. Opens Saved jobs.
-5. Returns Home.
-6. Types a search.
-7. Checks that the correct job appears.
+- `pumpWidget` creates the widget tree.
+- `pump` lets Flutter process a small update.
+- `pumpAndSettle` waits for animations and pending frames.
+- `find.text` searches for visible text.
+- `find.byType` searches for a widget type.
+- `tester.tap` performs a tap.
+- `tester.enterText` enters text into a field.
+- `expect` checks what should be true.
 
-Useful test commands:
+The existing test checks a complete story: the initial feed, bookmark behavior, Saved navigation, Home navigation, and search.
+
+### Write a test from a user story
+
+Use this format:
+
+```text
+Given the app is open
+When the user performs an action
+Then the user sees a result
+```
+
+Example:
+
+```dart
+testWidgets('user can open Applications', (tester) async {
+  await tester.pumpWidget(const ProviderScope(child: JobSearchApp()));
+  await tester.pumpAndSettle();
+
+  await tester.tap(find.text('Applications').last);
+  await tester.pump();
+
+  expect(find.text('Applications'), findsOneWidget);
+});
+```
+
+Run the focused test with:
+
+```text
+flutter test test/widget_test.dart
+```
+
+Tests are not only for finished features. Writing a test first forces you to define what success means.
+
+## 10. A Repeatable Feature Workflow
+
+When you want to add a feature, follow this order:
+
+### Step 1: describe the behavior
+
+Write one sentence: "A user can ... and then ..." Avoid implementation words at first.
+
+### Step 2: identify the data
+
+Decide whether you need a new entity field, a new entity, or no data change.
+
+### Step 3: identify the owner
+
+Ask where the behavior belongs:
+
+- Data retrieval: repository.
+- Business rule or changing shared state: provider.
+- Layout and interaction wiring: page or widget.
+- User-visible proof: widget test.
+
+### Step 4: make the smallest code change
+
+Change one layer, run `flutter analyze`, and read the first error before changing another layer.
+
+### Step 5: connect the layers
+
+Pass the value or callback across the existing boundary. Avoid making the page perform repository work directly.
+
+### Step 6: test the behavior
+
+Test the happy path first. Then test an empty result, duplicate action, or error if that case matters.
+
+### Step 7: review your own code
+
+Ask:
+
+- Can I explain every new line?
+- Does each class still have one clear job?
+- What happens if the list is empty?
+- What happens if the operation fails?
+- Does the test fail if I remove the feature?
+
+## 11. Learning Exercises in Order
+
+Complete these in sequence. Do not skip to the biggest feature.
+
+1. Change the page heading and find its source.
+2. Add a fifth demo job.
+3. Add a new category and make filtering work.
+4. Display an additional field on a job card.
+5. Add a clear-search button.
+6. Add a test for the clear-search behavior.
+7. Add an empty-state test for a search with no results.
+8. Add a new bottom-navigation page with local state.
+9. Add a provider action that changes shared state.
+10. Replace the in-memory repository with a fake repository used only by a test.
+
+After each exercise, run:
 
 ```text
 flutter analyze
 flutter test test/widget_test.dart
 ```
 
-`flutter analyze` checks code structure and types. The widget test checks behavior.
+Make a small commit or save a short note after each exercise describing what you learned and what confused you. Explaining your own change is part of becoming a programmer.
 
-## 12. How to Run the Flutter App
+## 12. Debugging Checklist
 
-From the project root:
+When something does not work, do not immediately rewrite it. Ask:
+
+1. Is the code path running? Add a temporary `print` or set a breakpoint.
+2. Is the value what I expect? Inspect it before and after the action.
+3. Is the widget watching the provider, or only reading it once?
+4. Did I call `setState` for page-owned state?
+5. Did an async operation finish before I checked the result?
+6. Does the error message identify a missing import, type, constructor argument, or null value?
+7. Can I reproduce the problem with one small test?
+
+Use these commands:
 
 ```text
-flutter pub get
+flutter analyze
+flutter test
+flutter devices
 flutter run
 ```
 
-To see available devices:
+Read compiler messages from the top. The first error often causes several later errors.
 
-```text
-flutter devices
-```
+## 13. What This Demo Does Not Do Yet
 
-To run on Windows, use a Windows device. To run in a browser, choose Chrome when Flutter asks for a device.
+The current app uses in-memory data:
 
-## 13. Safe Beginner Exercises
-
-Try these one at a time:
-
-1. Change the app title in `main.dart`.
-2. Add a fifth demo job in `in_memory_job_repository.dart`.
-3. Add a new category to `_categories` in `job_home_page.dart`.
-4. Change the card color in `_Tag`.
-5. Add a new application status to `ApplicationStatus`.
-6. Add a test that taps **Applications** and checks for `Applications`.
-7. Add a **Clear** icon to the search field that sets the controller text to an empty string.
-
-After each small change, run:
-
-```text
-flutter analyze
-flutter test test/widget_test.dart
-```
-
-## 14. Important Learning Note
-
-The current Flutter app uses in-memory demo data. That means:
-
-- Jobs are built into the app.
+- Jobs are created inside the app.
 - Bookmarks disappear when the app closes.
 - Applications disappear when the app closes.
-- The secure token helper is ready, but login screens and API wiring are separate work.
+- `SecureTokenStore` can store tokens, but it does not implement login.
+- There is no real API connected to the job repository yet.
 
-That is intentional for learning. The code is small enough to understand. Later, the repository can be replaced with an HTTP repository without changing the page's basic job-search rules.
-
-The main lesson is this:
+This is useful for learning because the data flow is small and visible. When you later add an API, keep the same direction:
 
 ```text
-Widgets show things.
-Providers remember things.
-Repositories find things.
-Entities describe things.
-Tests protect things.
+page -> provider -> repository -> API
+page <- provider <- repository <- API result
 ```
+
+The page should not need to know whether the repository uses a list or the network.
+
+## 14. The Main Lesson
+
+When you are unsure where to write code, classify the problem first:
+
+```text
+What is the data?        -> entity
+Where does it come from? -> repository
+What rule changes it?    -> provider
+How is it displayed?     -> widget/page
+How do I prove it works? -> test
+```
+
+Then make the smallest change that answers the user's need, run the analyzer, run a focused test, and explain the result in your own words.
