@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole { JOB_SEEKER RECRUITER ADMIN }
+enum JobStatus { DRAFT PUBLISHED ARCHIVED }
+enum ApplicationStatus { SUBMITTED REVIEWING INTERVIEW OFFER REJECTED }
+
+model User {
+  id           String        @id @default(uuid()) @db.Uuid
+  oidcSubject  String        @unique @map("oidc_subject")
+  email        String        @unique
+  displayName  String        @map("display_name")
+  role         UserRole      @default(JOB_SEEKER)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  bookmarks    Bookmark[]
+  applications Application[]
+  companies    Company[]
+  @@map("users")
+}
+
+model Company {
+  id          String   @id @default(uuid()) @db.Uuid
+  ownerId     String   @map("owner_id") @db.Uuid
+  name        String
+  logoUrl     String?  @map("logo_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  jobs        Job[]
+  @@index([ownerId])
+  @@map("companies")
+}
+
+model Job {
+  id             String       @id @default(uuid()) @db.Uuid
+  companyId      String       @map("company_id") @db.Uuid
+  title          String
+  description    String
+  location       String
+  employmentType String       @map("employment_type")
+  workplace      String
+  salaryMin      Int?         @map("salary_min")
+  salaryMax      Int?         @map("salary_max")
+  status         JobStatus    @default(DRAFT)
+  postedAt       DateTime?    @map("posted_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  company        Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  bookmarks      Bookmark[]
+  applications   Application[]
+  @@index([status, postedAt(sort: Desc)])
+  @@index([companyId])
+  @@map("jobs")
+}
+
+model Bookmark {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  jobId     String   @map("job_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  @@unique([userId, jobId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("bookmarks")
+}
+
+model Application {
+  id          String            @id @default(uuid()) @db.Uuid
+  userId      String            @map("user_id") @db.Uuid
+  jobId       String            @map("job_id") @db.Uuid
+  resumeUrl   String            @map("resume_url")
+  status      ApplicationStatus @default(SUBMITTED)
+  appliedAt  DateTime          @default(now()) @map("applied_at")
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job         Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  @@unique([userId, jobId])
+  @@index([userId, appliedAt(sort: Desc)])
+  @@index([jobId, status])
+  @@map("applications")
+}

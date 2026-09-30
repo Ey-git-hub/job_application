@@ -46,3 +46,14 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Node.js services
+**/node_modules/
+**/dist/
+**/npm-debug.log*
+*.env
+!.env.example
+
+# Local infrastructure data
+postgres-data/
+redis-data/
