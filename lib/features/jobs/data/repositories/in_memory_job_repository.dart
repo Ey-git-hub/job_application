@@ -52,7 +52,8 @@ class InMemoryJobRepository implements JobRepository {
       salary: '\$130k - \$165k',
       logoLetter: 'G',
       logoColor: 0xff7028a0,
-    ), Job(
+    ),
+    Job(
       id: 'job-5',
       title: 'Senior backend Developer',
       company: 'TechFlow Inc.',
@@ -64,7 +65,7 @@ class InMemoryJobRepository implements JobRepository {
       logoLetter: 'T',
       logoColor: 0xff1689c7,
       isBookmarked: true,
-    )
+    ),
   ];
 
   @override
