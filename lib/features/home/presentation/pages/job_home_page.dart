@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../domain/entities/job.dart';
-import '../../domain/entities/job_application.dart';
-import '../providers/application_providers.dart';
-import '../providers/job_providers.dart';
+import '../../../applications/presentation/providers/application_providers.dart';
+import '../../../applications/presentation/widgets/application_tile.dart';
+import '../../../jobs/domain/entities/job.dart';
+import '../../../jobs/presentation/providers/job_providers.dart';
+import '../../../jobs/presentation/widgets/job_card.dart';
 
 class JobHomePage extends ConsumerStatefulWidget {
   const JobHomePage({super.key});
@@ -87,7 +88,7 @@ class _JobHomePageState extends ConsumerState<JobHomePage> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             sliver: SliverList.builder(
               itemCount: items.length,
-              itemBuilder: (context, index) => _JobCard(
+              itemBuilder: (context, index) => JobCard(
                 job: items[index],
                 onOpen: () => _showJobDetails(items[index]),
               ),
@@ -178,7 +179,7 @@ class _JobHomePageState extends ConsumerState<JobHomePage> {
           : ListView.builder(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
               itemCount: saved.length,
-              itemBuilder: (context, index) => _JobCard(job: saved[index]),
+              itemBuilder: (context, index) => JobCard(job: saved[index]),
             ),
     );
   }
@@ -198,7 +199,7 @@ class _JobHomePageState extends ConsumerState<JobHomePage> {
               itemCount: applications.length,
               separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, index) =>
-                  _ApplicationTile(application: applications[index]),
+                  ApplicationTile(application: applications[index]),
             ),
     );
   }
@@ -345,149 +346,5 @@ class _JobHomePageState extends ConsumerState<JobHomePage> {
         label: 'Profile',
       ),
     ],
-  );
-}
-
-class _JobCard extends ConsumerWidget {
-  const _JobCard({required this.job, this.onOpen});
-
-  final Job job;
-  final VoidCallback? onOpen;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) => Card(
-    margin: const EdgeInsets.only(bottom: 12),
-    elevation: 0,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-      side: const BorderSide(color: Color(0xffe1e6ea)),
-    ),
-    child: InkWell(
-      onTap: onOpen,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 8, 11),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  backgroundColor: Color(job.logoColor),
-                  radius: 17,
-                  child: Text(
-                    job.logoLetter,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        job.title,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(job.company),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: () =>
-                      ref.read(jobFeedProvider.notifier).toggleBookmark(job.id),
-                  icon: Icon(
-                    job.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                    color: const Color(0xff146ca4),
-                    size: 21,
-                  ),
-                  tooltip: job.isBookmarked ? 'Remove bookmark' : 'Save job',
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
-            ),
-            const SizedBox(height: 9),
-            Wrap(
-              spacing: 5,
-              runSpacing: 5,
-              children: [
-                job.jobType,
-                job.workplace,
-                job.salary,
-              ].map((tag) => _Tag(label: tag)).toList(),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                const Icon(
-                  Icons.location_on_outlined,
-                  size: 15,
-                  color: Color(0xff5f6b76),
-                ),
-                const SizedBox(width: 3),
-                Text(job.location),
-                const Spacer(),
-                Text(job.postedLabel),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-class _ApplicationTile extends StatelessWidget {
-  const _ApplicationTile({required this.application});
-
-  final JobApplication application;
-
-  @override
-  Widget build(BuildContext context) => Card(
-    elevation: 0,
-    child: ListTile(
-      leading: const CircleAvatar(child: Icon(Icons.business_center_outlined)),
-      title: Text(application.jobTitle),
-      subtitle: Text(application.company),
-      trailing: Text(_statusLabel(application.status)),
-    ),
-  );
-}
-
-String _statusLabel(ApplicationStatus status) => switch (status) {
-  ApplicationStatus.submitted => 'Submitted',
-  ApplicationStatus.reviewing => 'Reviewing',
-  ApplicationStatus.interview => 'Interview',
-  ApplicationStatus.offer => 'Offer',
-  ApplicationStatus.rejected => 'Closed',
-};
-
-class _Tag extends StatelessWidget {
-  const _Tag({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: const Color(0xff146ca4),
-      borderRadius: BorderRadius.circular(7),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    ),
   );
 }
