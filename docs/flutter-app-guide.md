@@ -44,11 +44,11 @@ Start with these files in this order:
 
 ```text
 lib/main.dart
-lib/domain/entities/job.dart
-lib/domain/repositories/job_repository.dart
-lib/data/repositories/in_memory_job_repository.dart
-lib/presentation/providers/job_providers.dart
-lib/presentation/pages/job_home_page.dart
+lib/features/jobs/domain/entities/job.dart
+lib/features/jobs/domain/repositories/job_repository.dart
+lib/features/jobs/data/repositories/in_memory_job_repository.dart
+lib/features/jobs/presentation/providers/job_providers.dart
+lib/features/home/presentation/pages/job_home_page.dart
 test/widget_test.dart
 ```
 
@@ -190,7 +190,7 @@ The purpose of this exercise is to notice that two pieces of text can look relat
 
 ## 5. Model One Job
 
-Open `lib/domain/entities/job.dart`. The `Job` class is the data shape used by the rest of the app:
+Open `lib/features/jobs/domain/entities/job.dart`. The `Job` class is the data shape used by the rest of the app:
 
 ```dart
 class Job {
@@ -252,7 +252,7 @@ This is a useful professional habit: let compiler errors identify the places aff
 
 ## 6. Create a Data Source
 
-Open `lib/domain/repositories/job_repository.dart`. The repository is an interface, or contract:
+Open `lib/features/jobs/domain/repositories/job_repository.dart`. The repository is an interface, or contract:
 
 ```dart
 abstract interface class JobRepository {
@@ -266,7 +266,7 @@ abstract interface class JobRepository {
 
 The interface says what the app needs, not how the data is stored. A repository could use a list, an HTTP API, or a database and still satisfy this contract.
 
-Open `lib/data/repositories/in_memory_job_repository.dart`. This implementation stores demo jobs in a list and filters them. Learn the filtering as a sequence:
+Open `lib/features/jobs/data/repositories/in_memory_job_repository.dart`. This implementation stores demo jobs in a list and filters them. Learn the filtering as a sequence:
 
 1. Normalize the search query with lowercase text.
 2. Check title, company, and location.
@@ -288,7 +288,7 @@ Then run the app and test each prediction manually. Add a widget test if the job
 
 ## 7. Manage State with Riverpod
 
-Open `lib/presentation/providers/job_providers.dart`. There are two important layers:
+Open `lib/features/jobs/presentation/providers/job_providers.dart`. There are two important layers:
 
 ```dart
 final jobRepositoryProvider = Provider<JobRepository>(
@@ -348,7 +348,7 @@ jobs.when(
   error: (error, stackTrace) => const Text('Unable to load jobs'),
   data: (items) => SliverList.builder(
     itemCount: items.length,
-    itemBuilder: (context, index) => _JobCard(job: items[index]),
+    itemBuilder: (context, index) => JobCard(job: items[index]),
   ),
 );
 ```
@@ -371,7 +371,7 @@ Add a `clearSearch` method to the controller. Decide whether it should only chan
 
 ## 8. Build the Screen
 
-Open `lib/presentation/pages/job_home_page.dart`. `JobHomePage` is a `ConsumerStatefulWidget` because it needs both kinds of behavior:
+Open `lib/features/home/presentation/pages/job_home_page.dart`. `JobHomePage` is a `ConsumerStatefulWidget` because it needs both kinds of behavior:
 
 - `StatefulWidget` behavior for local values such as the selected bottom tab.
 - Riverpod behavior for watching and changing shared application state.
@@ -426,7 +426,7 @@ ref.read(jobFeedProvider.notifier).selectCategory(category);
 
 ### Job cards and details
 
-The list passes one job to `_JobCard`. The card displays data and sends user actions upward:
+The list passes one job to `JobCard`. The card displays data and sends user actions upward:
 
 ```dart
 onOpen: () => _showJobDetails(job),
@@ -597,7 +597,6 @@ The current app uses in-memory data:
 - Jobs are created inside the app.
 - Bookmarks disappear when the app closes.
 - Applications disappear when the app closes.
-- `SecureTokenStore` can store tokens, but it does not implement login.
 - There is no real API connected to the job repository yet.
 
 This is useful for learning because the data flow is small and visible. When you later add an API, keep the same direction:

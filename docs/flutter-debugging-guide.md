@@ -46,7 +46,7 @@ Example:
 
 ```text
 The method 'search' isn't defined for the type 'JobFeedController'.
-lib/presentation/pages/job_home_page.dart:52:45
+lib/features/home/presentation/pages/job_home_page.dart:52:45
 ```
 
 Translate it into normal language:
@@ -94,12 +94,11 @@ Use the feature name as your first clue.
 | Problem                   | Start here                                                         |
 | ------------------------- | ------------------------------------------------------------------ |
 | App does not start        | `lib/main.dart`                                                    |
-| Job cards look wrong      | `lib/presentation/pages/job_home_page.dart`                        |
-| Search returns wrong jobs | `lib/presentation/providers/job_providers.dart` and the repository |
-| Jobs are missing          | `lib/data/repositories/in_memory_job_repository.dart`              |
-| Bookmark does not change  | `job_providers.dart` and `_JobCard`                                |
+| Job cards look wrong      | `lib/features/jobs/presentation/widgets/job_card.dart`             |
+| Search returns wrong jobs | `lib/features/jobs/presentation/providers/job_providers.dart`      |
+| Jobs are missing          | `lib/features/jobs/data/repositories/in_memory_job_repository.dart` |
+| Bookmark does not change  | `job_providers.dart` and `JobCard`                                 |
 | Apply button does nothing | `job_home_page.dart` and `application_providers.dart`              |
-| Login token problem       | `lib/data/auth/secure_token_store.dart`                            |
 | Test fails                | `test/widget_test.dart` and the file named in the failure          |
 
 A useful rule is:
@@ -152,9 +151,9 @@ Read it from the first application file you recognize. Ignore framework lines at
 These are usually the most useful lines:
 
 ```text
-lib/presentation/pages/job_home_page.dart:28
-lib/presentation/providers/job_providers.dart:22
-lib/data/repositories/in_memory_job_repository.dart:45
+lib/features/home/presentation/pages/job_home_page.dart:28
+lib/features/jobs/presentation/providers/job_providers.dart:22
+lib/features/jobs/data/repositories/in_memory_job_repository.dart:45
 ```
 
 Framework lines such as `framework.dart` explain Flutter internals, but they are rarely where you should edit.
