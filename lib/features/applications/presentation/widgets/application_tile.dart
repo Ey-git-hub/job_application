@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_application/features/applications/domain/entities/application_status.dart';
 
 import '../../domain/entities/job_application.dart';
 
