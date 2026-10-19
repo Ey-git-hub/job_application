@@ -1,3 +1,5 @@
+import 'package:job_application/features/applications/domain/entities/application_status.dart';
+
 class JobApplication {
   const JobApplication({
     required this.id,
@@ -16,4 +18,4 @@ class JobApplication {
   final DateTime appliedAt;
 }
 
-enum ApplicationStatus { submitted, reviewing, interview, offer, rejected }
+
