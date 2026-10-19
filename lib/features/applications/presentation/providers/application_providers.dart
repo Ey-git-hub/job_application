@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:job_application/features/applications/domain/entities/application_status.dart';
 
 import '../../../jobs/domain/entities/job.dart';
 import '../../domain/entities/job_application.dart';
