@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../domain/entities/job.dart';
+import '../../../jobs/domain/entities/job.dart';
 import '../../domain/entities/job_application.dart';
 
 final applicationsProvider =
